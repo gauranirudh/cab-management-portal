@@ -1,87 +1,50 @@
 package com.anirudh.cabmanagementportal.service;
 
-import com.anirudh.cabmanagementportal.common.CabStatus;
-import com.anirudh.cabmanagementportal.dao.*;
-import com.anirudh.cabmanagementportal.entity.Cab;
+import com.anirudh.cabmanagementportal.dao.CityDao;
+import com.anirudh.cabmanagementportal.dao.CityDaoImpl;
+import com.anirudh.cabmanagementportal.dao.TripDao;
+import com.anirudh.cabmanagementportal.dao.TripDaoImpl;
 import com.anirudh.cabmanagementportal.entity.City;
 import com.anirudh.cabmanagementportal.entity.Trip;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
-public class CabService {
-    CabDao cabDao = new CabDaoImpl();
-    TripDao tripDao = new TripDaoImpl();
+public class CityService {
     CityDao cityDao = new CityDaoImpl();
-    public Cab searchCab(List<Cab> cabs, City sourceCity) {
+    TripDao tripDao = new TripDaoImpl();
+    public void onBoardCity(City city) {
         try {
-            if (cabs.size() == 0) {
-                return null;
-            }
-            //search cab which is IDLE and was updated earliest
-            CabDao cabDao = new CabDaoImpl();
-            Cab mostIdleCab = cabs.stream()
-                    .filter(c -> c.getStatus() == CabStatus.IDLE &&
-                            c.getCurrentCityId() == sourceCity.getId())
-                    .min(Comparator.comparing(Cab::getUpdatedAt)).get();
-            if (mostIdleCab == null) {
-                throw new Exception("No IDLE cabs found");
-            }
-            return mostIdleCab;
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            return null;
-        }
-    }
-
-    public void updateStatus(int cabId, CabStatus status) {
-        try {
-            cabDao.changeCabStatus(cabId, status);
+            cityDao.addCity(city);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void changeCurrentCity(Cab cab, City city) {
-        cabDao.changeCurrentCity(cab.getId(), city.getId());
-    }
-
-    //Bonus - Part 1
-    public long calculateIdleDuration(Cab cab, Timestamp start, Timestamp end) {
+    //Bonus - Part 3
+    public List<City> getHighDemandCities() {
+        List<City> cities = new ArrayList<>();
         try {
-            List<Trip> trips = tripDao.GetTripsByCab(cab.getId());
-            long totalTripTime = 0L;
-            for (Trip trip : trips) {
-                if (trip.getStartTime().after(start) && trip.getEndTime().before(end)) {
-                    totalTripTime += trip.getEndTime().getTime() - trip.getStartTime().getTime();
+            List<Trip> trips = tripDao.GetAllTrips();
+            //Assuming demand threshold to be 3
+            int threshold = 3;
+            HashMap<Integer, Integer> hmap = new HashMap<>();
+            for(Trip trip: trips) {
+                int cityId = trip.getStartCityId();
+                if(hmap.containsKey(cityId)) {
+                    hmap.put(cityId, hmap.get(trip.getStartCityId()) + 1);
+                }
+                else {
+                    hmap.put(cityId, 1);
+                }
+                if(hmap.get(cityId) > threshold) {
+                    cities.add(cityDao.getCityById(cityId));
                 }
             }
-            //Calculate IDLE time in milliseconds
-            long totalIdleTime = end.getTime() - start.getTime() - totalTripTime;
-            return totalIdleTime;
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return 0L;
-    }
-
-    //Bonus - Part 2
-    public List<String> generateCabHistory(Cab cab) {
-        List<String> states = new ArrayList<>();
-        try {
-            List<Trip> trips = tripDao.GetTripsByCab(cab.getId());
-            for (Trip trip : trips) {
-               City city =  cityDao.getCityById(trip.getStartCityId());
-               if(!states.contains(city.getState())) {
-                   states.add(city.getState());
-               }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return states;
+        return cities;
     }
 }
