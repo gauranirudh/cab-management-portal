@@ -7,11 +7,13 @@ import javax.persistence.Id;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
+import java.util.Objects;
 
 public class Cab {
 
     @Id
     @GeneratedValue
+    @NotNull
     private int id;
 
     @NotNull
@@ -34,8 +36,10 @@ public class Cab {
     private Timestamp updatedAt;
 
     //Constructor
-    public Cab(String ownerName, CabStatus status, String licensePlateNumber, int currentCityId, Timestamp createdAt, Timestamp updatedAt) {
-        OwnerName = ownerName;
+    public Cab(int id, String ownerName, CabStatus status, String licensePlateNumber,
+               int currentCityId, Timestamp createdAt, Timestamp updatedAt) {
+        this.id = id;
+        this.OwnerName = ownerName;
         this.status = status;
         this.licensePlateNumber = licensePlateNumber;
         this.currentCityId = currentCityId;
@@ -98,5 +102,19 @@ public class Cab {
 
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Cab cab = (Cab) o;
+        return id == cab.id && currentCityId == cab.currentCityId && OwnerName.equals(cab.OwnerName)
+                && status == cab.status && licensePlateNumber.equals(cab.licensePlateNumber);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, OwnerName, status, licensePlateNumber, currentCityId, createdAt, updatedAt);
     }
 }

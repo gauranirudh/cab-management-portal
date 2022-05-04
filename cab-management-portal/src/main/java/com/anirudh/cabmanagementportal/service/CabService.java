@@ -16,24 +16,21 @@ public class CabService {
     TripDao tripDao = new TripDaoImpl();
     CityDao cityDao = new CityDaoImpl();
     public Cab searchCab(List<Cab> cabs, City sourceCity) {
+        Cab mostIdleCab = new Cab();
         try {
             if (cabs.size() == 0) {
                 return null;
             }
             //search cab which is IDLE and was updated earliest
-            CabDao cabDao = new CabDaoImpl();
-            Cab mostIdleCab = cabs.stream()
+            mostIdleCab = cabs.stream()
                     .filter(c -> c.getStatus() == CabStatus.IDLE &&
                             c.getCurrentCityId() == sourceCity.getId())
-                    .min(Comparator.comparing(Cab::getUpdatedAt)).get();
-            if (mostIdleCab == null) {
-                throw new Exception("No IDLE cabs found");
-            }
-            return mostIdleCab;
+                    .min(Comparator.comparing(Cab::getUpdatedAt))
+                    .orElseGet(() -> null);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            return null;
+            return mostIdleCab;
         }
     }
 
@@ -43,6 +40,10 @@ public class CabService {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void changeCurrentCity(Cab cab, City city) {
+        cabDao.changeCurrentCity(cab.getId(), city.getId());
     }
 
     //Bonus - Part 1
@@ -70,10 +71,10 @@ public class CabService {
         try {
             List<Trip> trips = tripDao.GetTripsByCab(cab.getId());
             for (Trip trip : trips) {
-               City city =  cityDao.getCityById(trip.getStartCityId());
-               if(!states.contains(city.getState())) {
-                   states.add(city.getState());
-               }
+                City city =  cityDao.getCityById(trip.getStartCityId());
+                if(!states.contains(city.getState())) {
+                    states.add(city.getState());
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

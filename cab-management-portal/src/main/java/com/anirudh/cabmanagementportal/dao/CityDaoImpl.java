@@ -39,7 +39,7 @@ public class CityDaoImpl implements CityDao{
 
     public City getCityByName(String cityName) {
         try {
-            City city = new City("dummy", "dummy");
+            City city = new City();
             String queryString = "Select id, name, state From City where name = ?";
             connection = getConnection();
             ptmt = connection.prepareStatement(queryString);
@@ -70,7 +70,7 @@ public class CityDaoImpl implements CityDao{
 
     public City getCityById(int cityId) {
         try {
-            City city = new City("dummy", "dummy");
+            City city = new City();
             String queryString = "Select id, name, state From City where id = ?";
             connection = getConnection();
             ptmt = connection.prepareStatement(queryString);

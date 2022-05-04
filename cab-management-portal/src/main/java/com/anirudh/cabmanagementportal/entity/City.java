@@ -19,7 +19,8 @@ public class City {
     private String state;
 
     //Constructor
-    public City(String name, String state) {
+    public City(int id, String name, String state) {
+        this.id = id;
         this.name = name;
         this.state = state;
     }
